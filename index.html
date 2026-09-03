@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <title>StudyHelper</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">SH</div><div><div class="brand-name">StudyHelper</div><div class="brand-sub">College study + games</div></div></div>
+      <nav>
+        <button class="nav-item active" data-view="dashboard">Dashboard</button>
+        <button class="nav-item" data-view="courses">Courses</button>
+        <button class="nav-item" data-view="textbooks">Textbooks</button>
+        <button class="nav-item" data-view="games">Games</button>
+        <button class="nav-item" data-view="practice">Practice</button>
+        <button class="nav-item" data-view="progress">Progress</button>
+        <button class="nav-item" data-view="profile">Profile</button>
+        <button class="nav-item" data-view="settings">Settings</button>
+        <button class="nav-item" data-view="admin">Admin</button>
+      </nav>
+      <div class="sidebar-card"><div class="eyebrow">FREE-FIRST</div><strong>Private by default</strong><p>Your prototype data stays in this browser until cloud storage is connected.</p></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar"><div><span class="eyebrow">YOUR STUDY HQ</span><h1 id="page-title">Dashboard</h1></div><div class="top-actions"><button class="ghost" id="quickPractice">Quick practice</button><button class="ghost" id="logoutButton">Log out</button><button class="avatar avatar-button" id="profileAvatarButton" title="Open profile">M</button></div></header>
+      <section id="view"></section>
+    </main>
+  </div>
+
+  <div id="modal" class="modal hidden"><div class="modal-card"><button class="modal-close" id="closeModal">&times;</button><div id="modalContent"></div></div></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
