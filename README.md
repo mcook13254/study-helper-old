@@ -61,3 +61,24 @@ Logout calls Supabase sign-out, clears session storage/in-memory authentication 
 
 ## Current Supabase key names
 The deployment accepts SUPABASE_PUBLISHABLE_KEY and SUPABASE_SECRET_KEY, with backward compatibility for SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY.
+
+## Cloud authentication troubleshooting
+The browser now uses `/api/config` to detect Supabase. The endpoint accepts either `SUPABASE_PUBLISHABLE_KEY` or the legacy `SUPABASE_ANON_KEY`. If `/api/config` is unavailable, the login page now shows the actual HTTP error instead of silently switching to demo mode.
+
+## v0.9 study editor update
+- Added scrollable long-form study-set editor.
+- Added single-answer and multiple-answer question types.
+- Added checkbox selection and exact multi-answer grading in practice/game sessions.
+
+
+## v0.9 cloud persistence
+StudyHelper now loads courses, study sets, questions, and progress from Supabase for authenticated users and synchronizes changes through the protected `/api/data-sync` serverless function. The PDF file itself remains local until cloud textbook storage is implemented.
+
+### Supabase migration
+Run the full `supabase-schema.sql` in the Supabase SQL Editor. It is safe to rerun because tables/policies use `if not exists` / `drop policy if exists` patterns where appropriate.
+
+### Required Vercel environment variables
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`)
+- `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`)
+- `STUDYHELPER_SETUP_KEY` (or legacy `STUDY_HELPER_SETUP_KEY`)

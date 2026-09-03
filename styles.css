@@ -20,3 +20,23 @@ body.auth-locked .main #view { min-height:100vh; }
 .auth-setup-card{margin-top:16px;padding:16px;border:1px solid #e4e1ff;background:#f8f7ff;border-radius:14px}.auth-setup-card h3{margin:5px 0 6px;font-size:16px}.auth-setup-card .muted{font-size:12px;line-height:1.45;margin:0 0 10px}.auth-screen .form-label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}.auth-screen textarea,.auth-screen input{outline:none}.auth-screen .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
 
 .auth-setup-card{margin-top:16px;padding:16px;border:1px solid #e4e1ff;background:#f8f7ff;border-radius:14px}.auth-setup-card h3{margin:5px 0 6px;font-size:16px}.auth-setup-card .muted{font-size:12px;line-height:1.45;margin:0 0 10px}.auth-screen .form-label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}.auth-screen .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+/* Study set editor and long-form modal usability */
+.modal{align-items:flex-start;overflow-y:auto}
+.modal-card{max-height:calc(100vh - 32px);overflow-y:auto;overscroll-behavior:contain;margin:0 auto}
+.question-editor-card{scroll-margin-top:24px}
+.question-editor-card textarea{min-height:72px}
+.question-editor-card select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font:inherit}
+.answer-editor-grid{display:grid;gap:8px}
+.answer-editor-row{display:flex;align-items:center;gap:8px}
+.answer-editor-row input{flex:1}
+.choice-letter{width:30px;height:30px;border-radius:9px;background:#f0efff;color:#5546e7;display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+.correct-answer-list{display:grid;gap:8px}
+.correct-option{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fafbfc;cursor:pointer}
+.correct-option:hover{background:#f7f7ff;border-color:#c9c4ff}
+.correct-option input{width:17px;height:17px;margin:0}
+.correct-option span{flex:1;font-size:13px}
+.multi-answer{display:flex;align-items:center;gap:10px;cursor:pointer}
+.multi-answer input{width:18px;height:18px;margin:0;flex:none}
+.submit-multi{width:100%;margin-top:12px}
+@media (max-width:760px){.content{padding:20px}.topbar{padding:0 18px;height:76px}.sidebar{width:220px}.modal{padding:10px}.modal-card{max-height:calc(100vh - 20px);padding:20px}.answer-grid{grid-template-columns:1fr}.hero{flex-direction:column}.hero-actions{align-items:stretch}.hero-actions button{flex:1}}

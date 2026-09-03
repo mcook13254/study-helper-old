@@ -78,3 +78,72 @@ create policy "access request admin update" on public.access_requests for update
 
 -- v0.8 hardening: authenticated users may update only profile fields they own.
 revoke update (role, status) on public.profiles from authenticated;
+
+
+-- StudyHelper cloud data (v0.9 cloud persistence)
+create table if not exists public.courses (
+  id text primary key,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  code text not null default '',
+  mastery numeric not null default 0,
+  items integer not null default 0,
+  weak text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.study_sets (
+  id text primary key,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  course_id text not null,
+  title text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.questions (
+  id text primary key,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  set_id text not null references public.study_sets(id) on delete cascade,
+  question text not null,
+  answers jsonb not null default '[]'::jsonb,
+  correct jsonb not null default '0'::jsonb,
+  type text not null default 'single' check (type in ('single','multiple')),
+  explanation text not null default '',
+  concept text not null default '',
+  difficulty text not null default 'medium' check (difficulty in ('easy','medium','hard')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.progress (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  streak integer not null default 0,
+  xp integer not null default 0,
+  mastery numeric not null default 0,
+  questions_answered integer not null default 0,
+  best_streak integer not null default 0,
+  concepts jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.courses enable row level security;
+alter table public.study_sets enable row level security;
+alter table public.questions enable row level security;
+alter table public.progress enable row level security;
+
+drop policy if exists "courses own select" on public.courses;
+create policy "courses own select" on public.courses for select using (owner_id = auth.uid());
+drop policy if exists "study sets own select" on public.study_sets;
+create policy "study sets own select" on public.study_sets for select using (owner_id = auth.uid());
+drop policy if exists "questions own select" on public.questions;
+create policy "questions own select" on public.questions for select using (owner_id = auth.uid());
+drop policy if exists "progress own select" on public.progress;
+create policy "progress own select" on public.progress for select using (user_id = auth.uid());
+
+-- Writes/deletes for these tables are performed by the protected /api/data-sync endpoint.
+revoke insert, update, delete on public.courses from anon, authenticated;
+revoke insert, update, delete on public.study_sets from anon, authenticated;
+revoke insert, update, delete on public.questions from anon, authenticated;
+revoke insert, update, delete on public.progress from anon, authenticated;
