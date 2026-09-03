@@ -222,13 +222,132 @@ function normalizeQuestion(q={}) {
 function showNewSet(existingId=null){
   const existing=existingId?state.sets.find(s=>s.id===existingId):null;
   const courseOptions=state.courses.map(c=>`<option value="${c.id}" ${existing?.courseId===c.id?'selected':''}>${esc(c.code)} - ${esc(c.name)}</option>`).join('');
-  showModal(`<div class="eyebrow">${existing?'EDIT STUDY SET':'NEW STUDY SET'}</div><h2>${existing?'Edit your questions':'Create questions'}</h2><p class="muted">Choose whether each question has one correct answer or multiple correct answers. You can add several questions before saving.</p><label class="form-label">Course</label><select id="setCourse">${courseOptions}</select><label class="form-label">Set title</label><input id="setTitle" value="${esc(existing?.title||'')}" placeholder="Set title"><div id="questionEditor"></div><div class="modal-actions"><button class="secondary" id="addQuestion">+ Add question</button><button class="primary" id="saveSet">${existing?'Save changes':'Save study set'}</button></div>${existing?`<button class="ghost" id="deleteSet" style="margin-top:10px;color:#b42318">Delete study set</button>`:''}`);
-  let rows=existing?existing.questions.map(normalizeQuestion):[];
-  const capture=()=>{document.querySelectorAll('#questionEditor [data-f]').forEach(el=>{const r=rows[Number(el.dataset.i)];if(!r)return;const f=el.dataset.f;if(f==='q'||f==='concept'||f==='explain'||f==='difficulty'||f==='type')r[f]=el.value;else if(f.startsWith('a'))r.answers[Number(f.slice(1))]=el.value;else if(f==='correctSingle')r.correct=Number(el.value);else if(f==='correctMulti'){const n=Number(el.value),cur=Array.isArray(r.correct)?r.correct:[];if(el.checked&&!cur.includes(n))cur.push(n);if(!el.checked){const at=cur.indexOf(n);if(at>=0)cur.splice(at,1)}r.correct=cur.sort((a,b)=>a-b)}})};
-  const redraw=()=>{capture();document.getElementById('questionEditor').innerHTML=rows.map((r,idx)=>{const multiple=r.type==='multiple',correct=multiple?(Array.isArray(r.correct)?r.correct:[]):[Number(r.correct)];return `<div class="card question-editor-card"><div class="row"><strong>Question ${idx+1}</strong><button class="ghost" data-del="${idx}">Remove</button></div><label class="form-label">Question</label><textarea data-f="q" data-i="${idx}" rows="3" placeholder="Ask a clear question...">${esc(r.q)}</textarea><label class="form-label">Question type</label><select data-f="type" data-i="${idx}"><option value="single" ${!multiple?'selected':''}>One correct answer</option><option value="multiple" ${multiple?'selected':''}>Multiple correct answers</option></select><div class="hint">For multiple-answer questions, select every answer that should be considered correct.</div><label class="form-label">Answer choices</label><div class="answer-editor-grid">${r.answers.map((a,j)=>`<div class="answer-editor-row"><span class="choice-letter">${String.fromCharCode(65+j)}</span><input data-f="a${j}" data-i="${idx}" placeholder="Answer ${j+1}" value="${esc(a)}"></div>`).join('')}</div><label class="form-label">Correct answer${multiple?'s':''}</label><div class="correct-answer-list">${r.answers.map((a,j)=>multiple?`<label class="correct-option"><input type="checkbox" data-f="correctMulti" data-i="${idx}" value="${j}" ${correct.includes(j)?'checked':''}><span>${String.fromCharCode(65+j)}. ${esc(a||'Answer '+(j+1))}</span></label>`:`<label class="correct-option"><input type="radio" name="correct-${idx}" data-f="correctSingle" data-i="${idx}" value="${j}" ${correct.includes(j)?'checked':''}><span>${String.fromCharCode(65+j)}. ${esc(a||'Answer '+(j+1))}</span></label>`).join('')}</div><label class="form-label">Concept</label><input data-f="concept" data-i="${idx}" placeholder="e.g. recursion" value="${esc(r.concept)}"><label class="form-label">Explanation <span class="muted">(optional)</span></label><textarea data-f="explain" data-i="${idx}" rows="2" placeholder="Why are these answers correct?">${esc(r.explain)}</textarea><label class="form-label">Difficulty</label><select data-f="difficulty" data-i="${idx}"><option value="easy" ${r.difficulty==='easy'?'selected':''}>Easy</option><option value="medium" ${!r.difficulty||r.difficulty==='medium'?'selected':''}>Medium</option><option value="hard" ${r.difficulty==='hard'?'selected':''}>Hard</option></div>`}).join('')||'<div class="empty"><strong>No questions yet.</strong><p class="muted">Click + Add question to begin.</p></div>';document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{capture();rows.splice(Number(b.dataset.del),1);redraw()});document.querySelectorAll('#questionEditor select[data-f="type"]').forEach(el=>el.onchange=()=>{capture();const r=rows[Number(el.dataset.i)];r.type=el.value;r.correct=el.value==='multiple'?(Array.isArray(r.correct)?r.correct:[Number(r.correct)]):Number((Array.isArray(r.correct)?r.correct[0]:r.correct)||0);redraw()});document.querySelectorAll('#questionEditor [data-f="correctSingle"],[data-f="correctMulti"]').forEach(el=>el.onchange=()=>capture());document.querySelectorAll('#questionEditor textarea[data-f="q"],#questionEditor input[data-f^="a"],#questionEditor input[data-f="concept"],#questionEditor textarea[data-f="explain"],#questionEditor select[data-f="difficulty"]').forEach(el=>el.oninput=()=>capture())};
-  document.getElementById('addQuestion').onclick=()=>{capture();rows.push(normalizeQuestion({type:'single'}));redraw();setTimeout(()=>document.querySelector('#questionEditor .question-editor-card:last-child')?.scrollIntoView({behavior:'smooth',block:'start'}),50)};
-  document.getElementById('saveSet').onclick=()=>{capture();const title=document.getElementById('setTitle').value.trim(),courseId=document.getElementById('setCourse').value;if(!title||!courseId||!rows.length){alert('Please add a title, choose a course, and add at least one question.');return}for(let i=0;i<rows.length;i++){const r=rows[i],answers=r.answers.map(a=>a.trim()),filled=answers.map((a,j)=>a?j:null).filter(j=>j!==null);if(!r.q.trim()){alert(`Question ${i+1} needs a question.`);return}if(filled.length<2){alert(`Question ${i+1} needs at least two answer choices.`);return}const correct=Array.isArray(r.correct)?r.correct:[Number(r.correct)];if(r.type==='multiple'){r.correct=correct.filter(j=>answers[j]);if(!r.correct.length){alert(`Question ${i+1} needs at least one correct answer.`);return}}else{r.correct=Number(r.correct);if(!filled.includes(r.correct)){alert(`Question ${i+1} needs a correct answer.`);return}}if(!r.concept.trim()){alert(`Question ${i+1} needs a concept/topic.`);return}r.answers=answers}if(existing){const oldCourse=courseById(existing.courseId),newCourse=courseById(courseId);if(oldCourse&&oldCourse.id!==courseId)oldCourse.items=Math.max(0,oldCourse.items-existing.questions.length);existing.courseId=courseId;existing.title=title;existing.questions=rows;if(newCourse)newCourse.items=state.sets.filter(s=>s.courseId===courseId).reduce((n,s)=>n+(s.id===existing.id?0:s.questions.length),0)+rows.length;if(newCourse)newCourse.weak=rows[0].concept}else{const s={id:uid('set'),courseId,title,questions:rows};state.sets.unshift(s);const c=courseById(courseId);if(c){c.items+=rows.length;c.weak=rows[0].concept}}save();closeModal();state.view='courses';render()};
-  const del=document.getElementById('deleteSet');if(del)del.onclick=()=>{if(confirm('Delete this study set and its questions?')){state.sets=state.sets.filter(s=>s.id!==existing.id);const c=courseById(existing.courseId);if(c)c.items=Math.max(0,c.items-existing.questions.length);save();closeModal();render()}};redraw();
+  showModal(`<div class="eyebrow">${existing?'EDIT STUDY SET':'NEW STUDY SET'}</div><h2>${existing?'Edit your questions':'Create your study set'}</h2><p class="muted">Build each question without the editor jumping around. Use <strong>Multiple correct answers</strong> when more than one choice should be selected.</p><div class="editor-toolbar"><div><label class="form-label">Course</label><select id="setCourse">${courseOptions}</select></div><div style="flex:1"><label class="form-label">Set title</label><input id="setTitle" value="${esc(existing?.title||'')}" placeholder="e.g. Chapter 4 Review"></div></div><div class="editor-help">Tip: you can add all your questions first, then mark correct answers and add explanations. Your work stays in place while you edit.</div><div id="questionEditor" class="question-editor-list"></div><div class="modal-actions editor-actions"><button class="secondary" id="addQuestion">+ Add question</button><button class="primary" id="saveSet">${existing?'Save changes':'Save study set'}</button></div>${existing?`<button class="ghost danger-button" id="deleteSet">Delete entire study set</button>`:''}`);
+
+  const rows=existing?existing.questions.map(normalizeQuestion):[];
+  const editor=document.getElementById('questionEditor');
+  const makeRow=(input={})=>normalizeQuestion({...input,answers:Array.isArray(input.answers)&&input.answers.length?input.answers.slice(0,6):['','','','']});
+
+  function choiceMarkup(row,idx){
+    const multiple=row.type==='multiple';
+    const correct=multiple?(Array.isArray(row.correct)?row.correct:[]):[Number(row.correct)];
+    return row.answers.map((a,j)=>`<label class="correct-option"><input type="${multiple?'checkbox':'radio'}" ${multiple?'':'name="correct-'+idx+'"'} class="correct-control" data-index="${j}" ${correct.includes(j)?'checked':''}><span><b>${String.fromCharCode(65+j)}.</b> ${esc(a||'Answer '+(j+1))}</span></label>`).join('');
+  }
+
+  function renderCard(row,idx){
+    const wrap=document.createElement('article');
+    wrap.className='card question-editor-card';
+    wrap.dataset.index=idx;
+    wrap.innerHTML=`<div class="row question-card-head"><div><strong>Question ${idx+1}</strong><span class="question-state">${row.type==='multiple'?'Multiple answers':'Single answer'}</span></div><div class="question-card-actions"><button type="button" class="ghost duplicate-question">Duplicate</button><button type="button" class="ghost danger-outline remove-question">Remove</button></div></div>
+      <label class="form-label">Question</label>
+      <textarea class="q-input" rows="3" placeholder="Ask a clear question..."></textarea>
+      <label class="form-label">Question type</label>
+      <select class="type-input"><option value="single">One correct answer</option><option value="multiple">Multiple correct answers</option></select>
+      <div class="hint">For multiple-answer questions, check every choice that should be correct.</div>
+      <label class="form-label">Answer choices</label>
+      <div class="answer-editor-grid"></div>
+      <label class="form-label correct-label">Correct answer</label>
+      <div class="correct-answer-list"></div>
+      <label class="form-label">Concept / topic</label>
+      <input class="concept-input" placeholder="e.g. recursion">
+      <label class="form-label">Explanation <span class="muted">(optional)</span></label>
+      <textarea class="explain-input" rows="2" placeholder="Explain why the answer is correct."></textarea>
+      <div class="editor-two-col"><div><label class="form-label">Difficulty</label><select class="difficulty-input"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div><div class="answer-count-note">4 answer choices · up to 6 supported</div></div>`;
+
+    const q=wrap.querySelector('.q-input'); q.value=row.q||'';
+    const type=wrap.querySelector('.type-input'); type.value=row.type||'single';
+    const concept=wrap.querySelector('.concept-input'); concept.value=row.concept||'';
+    const explain=wrap.querySelector('.explain-input'); explain.value=row.explain||'';
+    const diff=wrap.querySelector('.difficulty-input'); diff.value=row.difficulty||'medium';
+    const answers=wrap.querySelector('.answer-editor-grid');
+    answers.innerHTML=row.answers.map((a,j)=>`<div class="answer-editor-row"><span class="choice-letter">${String.fromCharCode(65+j)}</span><input class="answer-input" data-answer-index="${j}" placeholder="Answer ${j+1}"></div>`).join('');
+    answers.querySelectorAll('.answer-input').forEach((el,j)=>el.value=row.answers[j]||'');
+
+    function refreshCorrect(){
+      const multi=type.value==='multiple';
+      wrap.querySelector('.question-state').textContent=multi?'Multiple answers':'Single answer';
+      wrap.querySelector('.correct-label').textContent=multi?'Correct answers':'Correct answer';
+      wrap.querySelector('.correct-answer-list').innerHTML=choiceMarkup(row,idx);
+      wrap.querySelectorAll('.correct-control').forEach(c=>c.addEventListener('change',()=>{
+        const n=Number(c.dataset.index);
+        if(multi){
+          if(!Array.isArray(row.correct)) row.correct=[];
+          if(c.checked&&!row.correct.includes(n)) row.correct.push(n);
+          if(!c.checked) row.correct=row.correct.filter(v=>v!==n);
+          row.correct.sort((a,b)=>a-b);
+        }else row.correct=n;
+      }));
+    }
+    refreshCorrect();
+
+    q.addEventListener('input',()=>row.q=q.value);
+    concept.addEventListener('input',()=>row.concept=concept.value);
+    explain.addEventListener('input',()=>row.explain=explain.value);
+    diff.addEventListener('change',()=>row.difficulty=diff.value);
+    type.addEventListener('change',()=>{
+      if(type.value==='multiple') row.correct=Array.isArray(row.correct)?row.correct:[Number(row.correct||0)];
+      else row.correct=Array.isArray(row.correct)?Number(row.correct[0]||0):Number(row.correct||0);
+      row.type=type.value;
+      refreshCorrect();
+    });
+    answers.querySelectorAll('.answer-input').forEach(el=>el.addEventListener('input',()=>{row.answers[Number(el.dataset.answerIndex)]=el.value;refreshCorrect()}));
+    wrap.querySelector('.remove-question').onclick=()=>{
+      const pos=rows.indexOf(row); if(pos<0)return;
+      rows.splice(pos,1); renderAll();
+      setTimeout(()=>{const last=document.querySelector('.question-editor-card:last-child'); last?.scrollIntoView({behavior:'smooth',block:'center'})},20);
+    };
+    wrap.querySelector('.duplicate-question').onclick=()=>{
+      const pos=rows.indexOf(row); const clone=makeRow({...row,id:uid('q'),answers:[...row.answers],correct:Array.isArray(row.correct)?[...row.correct]:row.correct});
+      rows.splice(pos+1,0,clone); renderAll();
+      setTimeout(()=>document.querySelectorAll('.question-editor-card')[pos+1]?.scrollIntoView({behavior:'smooth',block:'center'}),20);
+    };
+    return wrap;
+  }
+
+  function renderAll(){
+    editor.innerHTML='';
+    if(!rows.length){editor.innerHTML='<div class="empty editor-empty"><strong>No questions yet.</strong><p class="muted">Click <b>+ Add question</b> to start building your set.</p></div>';return;}
+    rows.forEach((row,idx)=>editor.appendChild(renderCard(row,idx)));
+  }
+
+  document.getElementById('addQuestion').onclick=()=>{
+    rows.push(makeRow({type:'single'})); renderAll();
+    setTimeout(()=>document.querySelector('.question-editor-card:last-child')?.scrollIntoView({behavior:'smooth',block:'start'}),20);
+  };
+
+  document.getElementById('saveSet').onclick=()=>{
+    const title=document.getElementById('setTitle').value.trim(),courseId=document.getElementById('setCourse').value;
+    if(!title||!courseId||!rows.length){alert('Please add a title, choose a course, and add at least one question.');return}
+    for(let i=0;i<rows.length;i++){
+      const r=rows[i],answers=r.answers.map(a=>String(a||'').trim()),filled=answers.map((a,j)=>a?j:null).filter(j=>j!==null);
+      r.q=String(r.q||'').trim(); r.concept=String(r.concept||'').trim(); r.explain=String(r.explain||'').trim(); r.answers=answers;
+      if(!r.q){alert(`Question ${i+1} needs a question.`);return}
+      if(filled.length<2){alert(`Question ${i+1} needs at least two answer choices.`);return}
+      const correct=Array.isArray(r.correct)?r.correct:[Number(r.correct)];
+      if(r.type==='multiple'){
+        r.correct=correct.filter(j=>answers[j]);
+        if(!r.correct.length){alert(`Question ${i+1} needs at least one correct answer.`);return}
+      }else{
+        r.correct=Number(r.correct); if(!filled.includes(r.correct)){alert(`Question ${i+1} needs a correct answer.`);return}
+      }
+      if(!r.concept){alert(`Question ${i+1} needs a concept/topic.`);return}
+    }
+    if(existing){
+      const oldCourse=courseById(existing.courseId),newCourse=courseById(courseId);
+      if(oldCourse&&oldCourse.id!==courseId)oldCourse.items=Math.max(0,oldCourse.items-existing.questions.length);
+      existing.courseId=courseId; existing.title=title; existing.questions=rows;
+      if(newCourse)newCourse.items=state.sets.filter(s=>s.courseId===courseId).reduce((n,s)=>n+(s.id===existing.id?0:s.questions.length),0)+rows.length;
+      if(newCourse)newCourse.weak=rows[0]?.concept||'Build a study set';
+    }else{
+      const s={id:uid('set'),courseId,title,questions:rows}; state.sets.unshift(s);
+      const c=courseById(courseId); if(c){c.items+=rows.length;c.weak=rows[0]?.concept||'Build a study set'}
+    }
+    save(); closeModal(); state.view='courses'; render();
+  };
+
+  const del=document.getElementById('deleteSet');
+  if(del)del.onclick=()=>{if(confirm('Delete this study set and all of its questions?')){state.sets=state.sets.filter(s=>s.id!==existing.id);const c=courseById(existing.courseId);if(c)c.items=Math.max(0,c.items-existing.questions.length);save();closeModal();render()}};
+  renderAll();
 }
 async function openTextbook(i){const b=state.books[i];if(!b){return}let blob=b.data?dataUrlToBlob(b.data):await getBookFile(b.fileId);if(!blob){showModal(`<h2>${esc(b.name)}</h2><p class="muted">The saved PDF file is unavailable in this browser. Please upload it again.</p>`);return}const url=URL.createObjectURL(blob);showModal(`<div class="row"><div><div class="eyebrow">TEXTBOOK READER</div><h2 style="margin:5px 0">${esc(b.name)}</h2></div><button class="secondary" id="bookPractice">Study this book</button></div><div style="height:65vh;margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden"><iframe title="Textbook reader" src="${url}" style="width:100%;height:100%;border:0"></iframe></div>`);document.getElementById('bookPractice').onclick=()=>{URL.revokeObjectURL(url);closeModal();state.view='practice';render();quiz()};document.getElementById('closeModal').onclick=()=>{URL.revokeObjectURL(url);closeModal()}}
 function dataUrlToBlob(dataUrl){try{const [head,b64]=dataUrl.split(',');const bin=atob(b64);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new Blob([bytes],{type:(head.match(/data:([^;]+)/)||[])[1]||'application/pdf'})}catch{return null}}
