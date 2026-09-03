@@ -4,7 +4,7 @@ async function adminContext(req) {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   const url = process.env.SUPABASE_URL;
   const anonKey = process.env.SUPABASE_ANON_KEY;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !anonKey || !serviceKey) return { error: 'Supabase is not configured on the server.', status: 503 };
   if (!token) return { error: 'Missing access token.', status: 401 };
   const client = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });

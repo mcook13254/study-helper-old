@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 module.exports = async function handler(req,res){
   if(req.method!=='POST') return res.status(405).json({error:'Method not allowed'});
-  const expectedKey=process.env.STUDYHELPER_SETUP_KEY,url=process.env.SUPABASE_URL,serviceKey=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const expectedKey=process.env.STUDYHELPER_SETUP_KEY,url=process.env.SUPABASE_URL,serviceKey=process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!expectedKey||!url||!serviceKey) return res.status(503).json({error:'First-time setup is not configured on the server.'});
   const {setupKey,name,email,password}=req.body||{};
   if(!setupKey||setupKey!==expectedKey)return res.status(401).json({error:'Invalid setup key.'});

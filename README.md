@@ -57,3 +57,7 @@ Cloud setup uses these Vercel environment variables:
 On a brand-new Supabase project with zero auth users, StudyHelper displays **Create first administrator**. The setup endpoint creates exactly one administrator and then refuses further bootstrap attempts.
 
 Logout calls Supabase sign-out, clears session storage/in-memory authentication state, closes open modals, and returns to an auth-only page. The dashboard shell and navigation are hidden while logged out.
+
+
+## Current Supabase key names
+The deployment accepts SUPABASE_PUBLISHABLE_KEY and SUPABASE_SECRET_KEY, with backward compatibility for SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY.
