@@ -227,6 +227,7 @@ function parseTxtStudySet(text){
     for(let i=0;i<lines.length;i++){
       const line=lines[i];
       let m=line.match(/^(?:Q|Question)\s*:\s*(.*)$/i); if(m){q=m[1].trim();continue;}
+      m=line.match(/^(?:[A-F]|\d+)[\.:]\s*(.*)$/i); if(m){answers.push(m[1].trim());continue;}
       m=line.match(/^(?:A|Answer|Choice|Option)\s*(?:[A-F]|\d+)?\s*:\s*(.*)$/i); if(m){answers.push(m[1].trim());continue;}
       m=line.match(/^(?:Correct|Correct Answers?)\s*:\s*(.*)$/i); if(m){correctRaw=m[1].trim();continue;}
       m=line.match(/^(?:Explanation|Explain)\s*:\s*(.*)$/i); if(m){explain=m[1].trim();continue;}
