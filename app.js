@@ -169,7 +169,7 @@ function finishCloudUi(){
 async function bootAuth(){
   setAuthChrome(true);
   await refreshSetupAvailability();
-  try{const res=await fetch('/api/config',{cache:'no-store'});if(!res.ok)throw new Error('Cloud authentication service returned HTTP '+res.status+'.');const cfg=await res.json();if(cfg.configured&&window.supabase){authMode='cloud';authClient=window.supabase.createClient(cfg.url,cfg.publishableKey||cfg.anonKey);await refreshAiAvailability();const {data}=await authClient.auth.getSession();if(data.session){await finishCloudSession(data.session);return}renderAuthOnly();return}}catch(e){renderAuthOnly();const err=document.getElementById('authError');if(err)err.innerHTML='<div class="auth-error">'+esc(e.message||'Cloud authentication is not configured.')+'</div>';return}
+  try{const res=await fetch('/api/config',{cache:'no-store'});if(!res.ok)throw new Error('Cloud authentication service returned HTTP '+res.status+'.');const cfg=await res.json();if(cfg.configured&&window.supabase){authMode='cloud';authClient=window.supabase.createClient(cfg.url,cfg.publishableKey||cfg.anonKey);const {data}=await authClient.auth.getSession();if(data.session){await finishCloudSession(data.session);return}renderAuthOnly();return}}catch(e){renderAuthOnly();const err=document.getElementById('authError');if(err)err.innerHTML='<div class="auth-error">'+esc(e.message||'Cloud authentication is not configured.')+'</div>';return}
   authMode='demo';sessionUser={id:'demo',name:'Mic',email:'demo@studyhelper.local',role:'admin',status:'active'};state=load();authReady=true;setAuthChrome(false);render();
 }
 async function logout(){
