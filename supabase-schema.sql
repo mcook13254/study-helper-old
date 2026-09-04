@@ -187,3 +187,64 @@ with check (bucket_id = 'textbooks' and (storage.foldername(name))[1] = (select 
 drop policy if exists "textbooks storage delete own" on storage.objects;
 create policy "textbooks storage delete own" on storage.objects for delete to authenticated
 using (bucket_id = 'textbooks' and (storage.foldername(name))[1] = (select auth.uid()::text));
+
+
+-- StudyHelper v1.5 sharing/library migration. Non-destructive: adds columns/tables only.
+alter table public.study_sets add column if not exists visibility text not null default 'private';
+alter table public.study_sets add column if not exists source_set_id text;
+alter table public.study_sets add column if not exists source_owner_id uuid;
+alter table public.study_sets add column if not exists source_creator_name text;
+
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'study_sets_visibility_check') then
+    alter table public.study_sets add constraint study_sets_visibility_check check (visibility in ('private','shared','public'));
+  end if;
+end $$;
+
+create table if not exists public.study_set_shares (
+  id uuid primary key default gen_random_uuid(),
+  set_id text not null references public.study_sets(id) on delete cascade,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  shared_with_user_id uuid references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists study_set_shares_public_idx
+  on public.study_set_shares(set_id) where shared_with_user_id is null;
+create unique index if not exists study_set_shares_user_idx
+  on public.study_set_shares(set_id, shared_with_user_id) where shared_with_user_id is not null;
+
+alter table public.study_set_shares enable row level security;
+revoke all on public.study_set_shares from anon, authenticated;
+grant select on public.study_set_shares to authenticated;
+
+drop policy if exists "study set shares visible to owner or recipient" on public.study_set_shares;
+create policy "study set shares visible to owner or recipient" on public.study_set_shares
+  for select using (owner_id = auth.uid() or shared_with_user_id = auth.uid());
+
+-- Shared/public study sets are readable; writes are handled by protected server functions.
+drop policy if exists "study sets accessible select" on public.study_sets;
+create policy "study sets accessible select" on public.study_sets
+  for select using (
+    owner_id = auth.uid()
+    or visibility = 'public'
+    or exists (
+      select 1 from public.study_set_shares sh
+      where sh.set_id = public.study_sets.id
+        and sh.shared_with_user_id = auth.uid()
+    )
+  );
+
+drop policy if exists "questions accessible select" on public.questions;
+create policy "questions accessible select" on public.questions
+  for select using (
+    owner_id = auth.uid()
+    or exists (
+      select 1 from public.study_sets s
+      where s.id = public.questions.set_id
+        and (s.visibility = 'public' or exists (
+          select 1 from public.study_set_shares sh
+          where sh.set_id = s.id and sh.shared_with_user_id = auth.uid()
+        ))
+    )
+  );

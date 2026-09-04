@@ -47,3 +47,14 @@ Textbook PDFs are still browser-local until private Supabase Storage + text extr
 
 ## v1.4.1 import fix
 The TXT importer now recognizes A-F and numbered choice labels such as `A:`, `B:`, `1:`, and `A)` in addition to the existing format. Your attached questions.txt parses successfully as 80 questions.
+
+
+## v1.5: Sharing, Library, Admin Dashboard
+- Non-destructive database migration adds study-set visibility/sharing metadata and `study_set_shares`.
+- Study sets can remain private, be shared with specific active StudyHelper accounts, or be public.
+- Library browsing shows sets available through direct sharing or public visibility.
+- Adding a shared set creates a private copy owned by the current user, with source attribution.
+- Admin dashboard includes high-level counts from the cloud backend.
+- Existing courses, study sets, questions, progress, and textbooks are not dropped or recreated.
+
+Run the full `supabase-schema.sql` in Supabase SQL Editor before deploying. The migration only adds columns/tables and replaces read policies to permit explicitly shared/public sets.
