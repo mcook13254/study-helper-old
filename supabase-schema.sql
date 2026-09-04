@@ -147,3 +147,43 @@ revoke insert, update, delete on public.courses from anon, authenticated;
 revoke insert, update, delete on public.study_sets from anon, authenticated;
 revoke insert, update, delete on public.questions from anon, authenticated;
 revoke insert, update, delete on public.progress from anon, authenticated;
+
+
+-- StudyHelper v1.4 private cloud textbook storage.
+create table if not exists public.textbooks (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  storage_path text not null unique,
+  size_bytes bigint not null default 0,
+  mime_type text not null default 'application/pdf',
+  course_id text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.textbooks enable row level security;
+revoke all on public.textbooks from anon;
+grant select, insert, delete on public.textbooks to authenticated;
+
+drop policy if exists "textbooks own select" on public.textbooks;
+create policy "textbooks own select" on public.textbooks for select using (owner_id = auth.uid());
+drop policy if exists "textbooks own insert" on public.textbooks;
+create policy "textbooks own insert" on public.textbooks for insert with check (owner_id = auth.uid());
+drop policy if exists "textbooks own delete" on public.textbooks;
+create policy "textbooks own delete" on public.textbooks for delete using (owner_id = auth.uid());
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('textbooks', 'textbooks', false, 104857600, array['application/pdf'])
+on conflict (id) do update set public = false, file_size_limit = 104857600, allowed_mime_types = array['application/pdf'];
+
+drop policy if exists "textbooks storage read own" on storage.objects;
+create policy "textbooks storage read own" on storage.objects for select to authenticated
+using (bucket_id = 'textbooks' and (storage.foldername(name))[1] = (select auth.uid()::text));
+
+drop policy if exists "textbooks storage insert own" on storage.objects;
+create policy "textbooks storage insert own" on storage.objects for insert to authenticated
+with check (bucket_id = 'textbooks' and (storage.foldername(name))[1] = (select auth.uid()::text) and storage.extension(name) = 'pdf');
+
+drop policy if exists "textbooks storage delete own" on storage.objects;
+create policy "textbooks storage delete own" on storage.objects for delete to authenticated
+using (bucket_id = 'textbooks' and (storage.foldername(name))[1] = (select auth.uid()::text));

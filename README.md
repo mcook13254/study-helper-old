@@ -36,3 +36,11 @@ Textbook PDFs are still browser-local until private Supabase Storage + text extr
 - No paid-provider fallback is implemented.
 - AI settings show provider/model and paid fallback status.
 - HTTP 429 responses produce a free-tier-unavailable message rather than switching providers.
+
+
+## v1.4 feature update
+- Removed the unfinished AI Study Chat from the main app.
+- Added private cloud textbook storage with Supabase Storage.
+- Added a two-path study-set workflow: manual creation or TXT import.
+- TXT import supports Question/Q, A/Answer/Choice/Option lines, Correct answers by letter/number/text, Concept/Topic, Difficulty, and Explanation. Multiple correct answers are supported with comma-separated values such as `Correct: A,B`.
+- For cloud textbook storage, rerun the full `supabase-schema.sql` in Supabase SQL Editor so the `textbooks` table, private bucket, and RLS policies are created.
