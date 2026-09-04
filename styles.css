@@ -55,3 +55,4 @@ body.auth-locked .main #view { min-height:100vh; }
 .book-row .meta{min-width:0}
 .book-row .meta strong{display:block;overflow:hidden;text-overflow:ellipsis}
 @media (max-width: 900px){.sidebar{position:static}.app-shell{display:block}.main{min-height:auto}.topbar{position:sticky;top:0;z-index:5}.book-row{flex-wrap:wrap}.book-row .meta{flex:1 1 220px}.card-actions{flex-wrap:wrap}}
+.mode-card{text-align:left;cursor:pointer;transition:transform .12s ease, border-color .12s ease}.mode-card:hover{transform:translateY(-1px);border-color:#aaa1ff}.mode-card:focus{outline:2px solid #aaa1ff;outline-offset:2px}

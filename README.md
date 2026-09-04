@@ -58,3 +58,17 @@ The TXT importer now recognizes A-F and numbered choice labels such as `A:`, `B:
 - Existing courses, study sets, questions, progress, and textbooks are not dropped or recreated.
 
 Run the full `supabase-schema.sql` in Supabase SQL Editor before deploying. The migration only adds columns/tables and replaces read policies to permit explicitly shared/public sets.
+
+
+## v1.5.1 reliability update
+- Cloud sync is merge-only; it no longer deletes records merely because an older/local state omitted them.
+- Existing study-set course assignments are preserved when a sync payload is missing a course id.
+- Practice and game sessions use one stable timer per session and guard against duplicate/late answers.
+- Library now includes all of the signed-in user's own study sets plus shared sets and library copies.
+
+## v1.6 reliability update
+- Study-set course assignments are preserved during cloud sync unless explicitly changed.
+- Library is the primary home for personal study sets; Courses remains focused on course organization.
+- Practice mode choices are now interactive.
+- Progress tracks current streak, best streak, XP this week, questions this week, and sessions this week.
+- The v1.6 Supabase migration is non-destructive and only adds progress/stat columns.

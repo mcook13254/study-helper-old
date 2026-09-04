@@ -248,3 +248,10 @@ create policy "questions accessible select" on public.questions
         ))
     )
   );
+
+-- StudyHelper v1.6 non-destructive progress/statistics migration.
+alter table public.progress add column if not exists last_study_date date;
+alter table public.progress add column if not exists week_key text;
+alter table public.progress add column if not exists questions_this_week integer not null default 0;
+alter table public.progress add column if not exists xp_this_week integer not null default 0;
+alter table public.progress add column if not exists sessions_this_week integer not null default 0;
