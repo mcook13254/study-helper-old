@@ -72,3 +72,11 @@ Run the full `supabase-schema.sql` in Supabase SQL Editor before deploying. The 
 - Practice mode choices are now interactive.
 - Progress tracks current streak, best streak, XP this week, questions this week, and sessions this week.
 - The v1.6 Supabase migration is non-destructive and only adds progress/stat columns.
+
+
+## v1.7 Friend usernames
+Sharing now uses unique StudyHelper usernames rather than email addresses. Email remains private for authentication. Existing profiles are backfilled with stable usernames.
+
+
+### v1.7 username sharing
+Friend sharing uses unique StudyHelper usernames (3-24 letters, numbers, underscores). Email remains private to account/authentication workflows and is not used by the study-set sharing UI. Existing study sets and course assignments are preserved; this migration only adds username fields/indexes and sharing behavior.

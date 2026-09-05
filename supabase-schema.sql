@@ -4,6 +4,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   name text not null default 'Student',
+  username text,
   email text not null default '',
   role text not null default 'student' check (role in ('student','admin')),
   status text not null default 'active' check (status in ('active','disabled')),
@@ -18,6 +19,7 @@ create table if not exists public.profiles (
 create table if not exists public.access_requests (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  username text not null,
   email text not null,
   major text not null default '',
   message text not null default '',
@@ -33,8 +35,8 @@ create unique index if not exists access_requests_pending_email_idx
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, name, email, avatar)
-  values (new.id, coalesce(new.raw_user_meta_data->>'name','Student'), coalesce(new.email,''), upper(left(coalesce(new.raw_user_meta_data->>'name','S'), 1)))
+  insert into public.profiles (id, name, username, email, avatar)
+  values (new.id, coalesce(new.raw_user_meta_data->>'name','Student'), nullif(lower(regexp_replace(coalesce(new.raw_user_meta_data->>'username',''), '[^a-z0-9_]', '', 'g')), ''), coalesce(new.email,''), upper(left(coalesce(new.raw_user_meta_data->>'name','S'), 1)))
   on conflict (id) do nothing;
   return new;
 end; $$;
@@ -78,6 +80,24 @@ create policy "access request admin update" on public.access_requests for update
 
 -- v0.8 hardening: authenticated users may update only profile fields they own.
 revoke update (role, status) on public.profiles from authenticated;
+
+-- StudyHelper v1.7 username migration. Non-destructive.
+alter table public.profiles add column if not exists username text;
+alter table public.access_requests add column if not exists username text;
+
+-- Backfill existing accounts with stable unique usernames.
+update public.profiles
+set username = left(nullif(regexp_replace(lower(coalesce(name,'student')), '[^a-z0-9_]', '', 'g'), ''), 16)
+  || '_' || replace(left(id::text, 6), '-', '')
+where username is null or btrim(username) = '';
+
+alter table public.profiles alter column username set not null;
+create unique index if not exists profiles_username_ci_idx on public.profiles (lower(username));
+create unique index if not exists access_requests_pending_username_idx on public.access_requests (lower(username)) where status = 'pending';
+
+grant update (name, username, major, school, bio, avatar, updated_at) on public.profiles to authenticated;
+revoke update (role, status, email) on public.profiles from authenticated;
+
 
 
 -- StudyHelper cloud data (v0.9 cloud persistence)
