@@ -49,6 +49,23 @@ function localSavedState(){
 function blankUserState(){
   return {courses:[],sets:[],books:[],requests:[],library:[],adminStats:null,progress:{streak:0,xp:0,mastery:0,questionsAnswered:0,bestStreak:0,lastStudyDate:'',weekKey:'',questionsThisWeek:0,xpThisWeek:0,sessionsThisWeek:0,concepts:{}},settings:{name:sessionUser?.name||'Student',username:sessionUser?.username||'',avatar:initials(sessionUser?.name||'Student'),bio:'',major:'',school:'',email:sessionUser?.email||'',userId:sessionUser?.id||''},users:[],view:'dashboard'}
 }
+function initials(name) {
+  const parts = String(name || 'Student')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!parts.length) return 'ST';
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return (
+    parts[0][0] +
+    parts[parts.length - 1][0]
+  ).toUpperCase();
+}
 let cloudSyncTimer=null;
 let cloudSyncInFlight=false;
 let cloudSyncPending=false;
