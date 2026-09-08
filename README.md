@@ -64,3 +64,6 @@ Sharing uses StudyHelper usernames for discovery; email remains only for authent
 
 ## v1.5.3 stats/admin update
 Admin content totals now load from Supabase across the platform, and each account displays its persisted current/best streak. Study activity persists `last_study_date` non-destructively.
+
+## v1.5.4 Admin textbook storage
+Adds a server-side Admin Storage endpoint and dashboard panel reporting actual private `textbooks` bucket usage, free allowance, file count, largest files, and an 80% warning. No textbook data is changed.
