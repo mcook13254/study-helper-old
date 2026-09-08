@@ -4,7 +4,6 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   name text not null default 'Student',
-  username text,
   email text not null default '',
   role text not null default 'student' check (role in ('student','admin')),
   status text not null default 'active' check (status in ('active','disabled')),
@@ -19,7 +18,6 @@ create table if not exists public.profiles (
 create table if not exists public.access_requests (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  username text not null,
   email text not null,
   major text not null default '',
   message text not null default '',
@@ -35,8 +33,8 @@ create unique index if not exists access_requests_pending_email_idx
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, name, username, email, avatar)
-  values (new.id, coalesce(new.raw_user_meta_data->>'name','Student'), nullif(lower(regexp_replace(coalesce(new.raw_user_meta_data->>'username',''), '[^a-z0-9_]', '', 'g')), ''), coalesce(new.email,''), upper(left(coalesce(new.raw_user_meta_data->>'name','S'), 1)))
+  insert into public.profiles (id, name, email, avatar)
+  values (new.id, coalesce(new.raw_user_meta_data->>'name','Student'), coalesce(new.email,''), upper(left(coalesce(new.raw_user_meta_data->>'name','S'), 1)))
   on conflict (id) do nothing;
   return new;
 end; $$;
@@ -80,24 +78,6 @@ create policy "access request admin update" on public.access_requests for update
 
 -- v0.8 hardening: authenticated users may update only profile fields they own.
 revoke update (role, status) on public.profiles from authenticated;
-
--- StudyHelper v1.7 username migration. Non-destructive.
-alter table public.profiles add column if not exists username text;
-alter table public.access_requests add column if not exists username text;
-
--- Backfill existing accounts with stable unique usernames.
-update public.profiles
-set username = left(nullif(regexp_replace(lower(coalesce(name,'student')), '[^a-z0-9_]', '', 'g'), ''), 16)
-  || '_' || replace(left(id::text, 6), '-', '')
-where username is null or btrim(username) = '';
-
-alter table public.profiles alter column username set not null;
-create unique index if not exists profiles_username_ci_idx on public.profiles (lower(username));
-create unique index if not exists access_requests_pending_username_idx on public.access_requests (lower(username)) where status = 'pending';
-
-grant update (name, username, major, school, bio, avatar, updated_at) on public.profiles to authenticated;
-revoke update (role, status, email) on public.profiles from authenticated;
-
 
 
 -- StudyHelper cloud data (v0.9 cloud persistence)
@@ -209,69 +189,32 @@ create policy "textbooks storage delete own" on storage.objects for delete to au
 using (bucket_id = 'textbooks' and (storage.foldername(name))[1] = (select auth.uid()::text));
 
 
--- StudyHelper v1.5 sharing/library migration. Non-destructive: adds columns/tables only.
-alter table public.study_sets add column if not exists visibility text not null default 'private';
-alter table public.study_sets add column if not exists source_set_id text;
-alter table public.study_sets add column if not exists source_owner_id uuid;
-alter table public.study_sets add column if not exists source_creator_name text;
+-- StudyHelper v1.5 sharing/library migration (non-destructive)
+alter table public.profiles add column if not exists username text;
 
-do $$ begin
-  if not exists (select 1 from pg_constraint where conname = 'study_sets_visibility_check') then
-    alter table public.study_sets add constraint study_sets_visibility_check check (visibility in ('private','shared','public'));
-  end if;
-end $$;
+update public.profiles
+set username = lower(left(regexp_replace(coalesce(nullif(name,''),'student'), '[^a-zA-Z0-9]+', '_', 'g'), 15)) || '_' || left(replace(id::text,'-',''), 7)
+where username is null or btrim(username) = '';
+
+create unique index if not exists profiles_username_lower_idx on public.profiles (lower(username));
+
+-- Allow authenticated users to update their own username, while role/status remain protected.
+revoke update on public.profiles from authenticated;
+grant update (name, username, major, school, bio, avatar, updated_at) on public.profiles to authenticated;
 
 create table if not exists public.study_set_shares (
   id uuid primary key default gen_random_uuid(),
   set_id text not null references public.study_sets(id) on delete cascade,
   owner_id uuid not null references auth.users(id) on delete cascade,
-  shared_with_user_id uuid references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now()
+  recipient_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
 );
 
-create unique index if not exists study_set_shares_public_idx
-  on public.study_set_shares(set_id) where shared_with_user_id is null;
-create unique index if not exists study_set_shares_user_idx
-  on public.study_set_shares(set_id, shared_with_user_id) where shared_with_user_id is not null;
+create unique index if not exists study_set_shares_set_recipient_uidx on public.study_set_shares(set_id, recipient_id);
 
 alter table public.study_set_shares enable row level security;
 revoke all on public.study_set_shares from anon, authenticated;
-grant select on public.study_set_shares to authenticated;
 
-drop policy if exists "study set shares visible to owner or recipient" on public.study_set_shares;
-create policy "study set shares visible to owner or recipient" on public.study_set_shares
-  for select using (owner_id = auth.uid() or shared_with_user_id = auth.uid());
-
--- Shared/public study sets are readable; writes are handled by protected server functions.
-drop policy if exists "study sets accessible select" on public.study_sets;
-create policy "study sets accessible select" on public.study_sets
-  for select using (
-    owner_id = auth.uid()
-    or visibility = 'public'
-    or exists (
-      select 1 from public.study_set_shares sh
-      where sh.set_id = public.study_sets.id
-        and sh.shared_with_user_id = auth.uid()
-    )
-  );
-
-drop policy if exists "questions accessible select" on public.questions;
-create policy "questions accessible select" on public.questions
-  for select using (
-    owner_id = auth.uid()
-    or exists (
-      select 1 from public.study_sets s
-      where s.id = public.questions.set_id
-        and (s.visibility = 'public' or exists (
-          select 1 from public.study_set_shares sh
-          where sh.set_id = s.id and sh.shared_with_user_id = auth.uid()
-        ))
-    )
-  );
-
--- StudyHelper v1.6 non-destructive progress/statistics migration.
-alter table public.progress add column if not exists last_study_date date;
-alter table public.progress add column if not exists week_key text;
-alter table public.progress add column if not exists questions_this_week integer not null default 0;
-alter table public.progress add column if not exists xp_this_week integer not null default 0;
-alter table public.progress add column if not exists sessions_this_week integer not null default 0;
+drop policy if exists "study set shares own or received" on public.study_set_shares;
+create policy "study set shares own or received" on public.study_set_shares
+for select using (owner_id = auth.uid() or recipient_id = auth.uid());
