@@ -6,7 +6,7 @@ module.exports = async function handler(req, res) {
     const authHeader = req.headers.authorization || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
     const url = process.env.SUPABASE_URL;
-    const anonKey = process.env.SUPABASE_ANON_KEY;
+    const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
     const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !anonKey || !serviceKey) return res.status(503).json({ error: "Supabase is not configured on the server." });
     if (!token) return res.status(401).json({ error: "Missing access token." });

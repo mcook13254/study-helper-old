@@ -207,7 +207,7 @@ create table if not exists public.study_set_shares (
   set_id text not null references public.study_sets(id) on delete cascade,
   owner_id uuid not null references auth.users(id) on delete cascade,
   recipient_id uuid not null references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
 );
 
 create unique index if not exists study_set_shares_set_recipient_uidx on public.study_set_shares(set_id, recipient_id);

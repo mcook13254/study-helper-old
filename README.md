@@ -53,3 +53,14 @@ The TXT importer now recognizes A-F and numbered choice labels such as `A:`, `B:
 Built from the stable v1.4.1 base. Adds username-based study-set sharing and Library without the later stats/groups/game changes. Existing study data is preserved; only the new sharing table is created.
 
 Sharing uses StudyHelper usernames for discovery; email remains only for authentication/access requests. The Library contains personal sets plus received shares.
+
+## Friend-ready security hardening
+This package intentionally keeps the existing v1.4.1 + sharing frontend unchanged. It hardens only the backend/database layer.
+
+### Important change: cloud sync is now additive
+The previous sync endpoint could delete cloud rows that were missing from a stale browser snapshot. This build never infers deletions from sync state. Existing course assignments are also preserved when a browser payload contains a blank/omitted course id.
+
+### Before production sharing
+Run `security-hardening.sql` once in Supabase SQL Editor. It is non-destructive.
+
+You may continue using the existing v1.4.1 + sharing frontend files. Replace only the API files in this package when applying the hardening pass.
