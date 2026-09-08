@@ -54,13 +54,9 @@ Built from the stable v1.4.1 base. Adds username-based study-set sharing and Lib
 
 Sharing uses StudyHelper usernames for discovery; email remains only for authentication/access requests. The Library contains personal sets plus received shares.
 
-## Friend-ready security hardening
-This package intentionally keeps the existing v1.4.1 + sharing frontend unchanged. It hardens only the backend/database layer.
 
-### Important change: cloud sync is now additive
-The previous sync endpoint could delete cloud rows that were missing from a stale browser snapshot. This build never infers deletions from sync state. Existing course assignments are also preserved when a browser payload contains a blank/omitted course id.
-
-### Before production sharing
-Run `security-hardening.sql` once in Supabase SQL Editor. It is non-destructive.
-
-You may continue using the existing v1.4.1 + sharing frontend files. Replace only the API files in this package when applying the hardening pass.
+## Security hardening
+- Removed the local administrator demo path.
+- Logged-out users cannot enter the dashboard through a local demo session.
+- Added a 15-minute inactivity timeout that signs the user out and returns to the locked login screen.
+- Access requests require the cloud backend.

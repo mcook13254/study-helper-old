@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
   try {
     const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const url = process.env.SUPABASE_URL;
-    const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+    const anonKey = process.env.SUPABASE_ANON_KEY;
     const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !anonKey || !serviceKey) return res.status(503).json({ error: 'Supabase is not configured on the server.' });
     if (!token) return res.status(401).json({ error: 'Missing access token.' });
@@ -28,20 +28,6 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    if (action === 'role' && role === 'student') {
-      const { count, error: countError } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'admin').eq('status', 'active');
-      if (countError) return res.status(400).json({ error: countError.message });
-      if ((count || 0) <= 1) return res.status(400).json({ error: 'You cannot remove the last active administrator.' });
-    }
-    if (action === 'status' && status === 'disabled') {
-      const { data: target, error: targetError } = await admin.from('profiles').select('role,status').eq('id', userId).single();
-      if (targetError) return res.status(400).json({ error: targetError.message });
-      if (target?.role === 'admin' && target?.status === 'active') {
-        const { count, error: countError } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'admin').eq('status', 'active');
-        if (countError) return res.status(400).json({ error: countError.message });
-        if ((count || 0) <= 1) return res.status(400).json({ error: 'You cannot disable the last active administrator.' });
-      }
-    }
     const patch = action === 'role' ? { role } : { status };
     if (action === 'role' && !['student', 'admin'].includes(role)) return res.status(400).json({ error: 'Invalid role.' });
     if (action === 'status' && !['active', 'disabled'].includes(status)) return res.status(400).json({ error: 'Invalid status.' });
