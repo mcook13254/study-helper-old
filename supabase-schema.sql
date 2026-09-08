@@ -128,6 +128,9 @@ create table if not exists public.progress (
   updated_at timestamptz not null default now()
 );
 
+-- Non-destructive streak persistence upgrade.
+alter table public.progress add column if not exists last_study_date date;
+
 alter table public.courses enable row level security;
 alter table public.study_sets enable row level security;
 alter table public.questions enable row level security;

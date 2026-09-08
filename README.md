@@ -60,3 +60,7 @@ Sharing uses StudyHelper usernames for discovery; email remains only for authent
 - Logged-out users cannot enter the dashboard through a local demo session.
 - Added a 15-minute inactivity timeout that signs the user out and returns to the locked login screen.
 - Access requests require the cloud backend.
+
+
+## v1.5.3 stats/admin update
+Admin content totals now load from Supabase across the platform, and each account displays its persisted current/best streak. Study activity persists `last_study_date` non-destructively.

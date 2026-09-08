@@ -40,7 +40,7 @@ module.exports = async function handler(req,res){
     if(courseRows.length){const {error}=await admin.from('courses').upsert(courseRows,{onConflict:'id'});if(error)throw error}
     if(setRows.length){const {error}=await admin.from('study_sets').upsert(setRows,{onConflict:'id'});if(error)throw error}
     if(questionRows.length){const {error}=await admin.from('questions').upsert(questionRows,{onConflict:'id'});if(error)throw error}
-    const progressRow={user_id:authData.user.id,streak:Number(progress.streak||0),xp:Number(progress.xp||0),mastery:Number(progress.mastery||0),questions_answered:Number(progress.questionsAnswered||0),best_streak:Number(progress.bestStreak||0),concepts:progress.concepts&&typeof progress.concepts==='object'?progress.concepts:{},updated_at:new Date().toISOString()};
+    const progressRow={user_id:authData.user.id,streak:Number(progress.streak||0),xp:Number(progress.xp||0),mastery:Number(progress.mastery||0),questions_answered:Number(progress.questionsAnswered||0),best_streak:Number(progress.bestStreak||0),last_study_date:progress.lastStudyDate||null,concepts:progress.concepts&&typeof progress.concepts==='object'?progress.concepts:{},updated_at:new Date().toISOString()};
     const {error:progressError}=await admin.from('progress').upsert(progressRow,{onConflict:'user_id'});if(progressError)throw progressError;
     return res.status(200).json({ok:true});
   }catch(error){return res.status(500).json({error:error.message||'Cloud sync failed.'})}
