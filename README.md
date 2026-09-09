@@ -1,6 +1,33 @@
-# StudyHelper v1.5
+# StudyHelper v1.2 — Free Qwen AI
 
-This build keeps StudyHelper's existing Vercel + Supabase architecture.
+This build keeps StudyHelper's existing Vercel + Supabase architecture and changes the AI tutor to use **Qwen via Groq's free plan**. The application does not fall back to a paid provider.
+
+## AI environment variables
+
+Add this Vercel Production environment variable:
+- `GROQ_API_KEY` — your Groq API key. Keep it server-side; never put it in GitHub or browser code.
+
+Optional:
+- `GROQ_MODEL` — defaults to `qwen/qwen3.6-27b`.
+
+Groq currently publishes free-plan limits for Qwen models. If a free-plan limit is reached, StudyHelper displays the provider error and does not switch to OpenAI or any other paid service.
+
+## Existing Supabase variables
+
+Keep your existing:
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY` or `SUPABASE_ANON_KEY`
+- `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY` (server-side only)
+- `STUDYHELPER_SETUP_KEY`
+
+## AI behavior
+
+The AI endpoint:
+- requires an authenticated StudyHelper user;
+- reads selected course/study-set material from Supabase;
+- sends only the selected context plus chat history to Qwen;
+- never exposes the provider key to the browser;
+- reports provider/rate-limit errors instead of silently charging another provider.
 
 Textbook PDFs are still browser-local until private Supabase Storage + text extraction is added.
 
@@ -26,17 +53,3 @@ The TXT importer now recognizes A-F and numbered choice labels such as `A:`, `B:
 Built from the stable v1.4.1 base. Adds username-based study-set sharing and Library without the later stats/groups/game changes. Existing study data is preserved; only the new sharing table is created.
 
 Sharing uses StudyHelper usernames for discovery; email remains only for authentication/access requests. The Library contains personal sets plus received shares.
-
-
-## Security hardening
-- Removed the local administrator demo path.
-- Logged-out users cannot enter the dashboard through a local demo session.
-- Added a 15-minute inactivity timeout that signs the user out and returns to the locked login screen.
-- Access requests require the cloud backend.
-
-
-## v1.5.3 stats/admin update
-Admin content totals now load from Supabase across the platform, and each account displays its persisted current/best streak. Study activity persists `last_study_date` non-destructively.
-
-## v1.5.4 Admin textbook storage
-Adds a server-side Admin Storage endpoint and dashboard panel reporting actual private `textbooks` bucket usage, free allowance, file count, largest files, and an 80% warning. No textbook data is changed.

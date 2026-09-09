@@ -1,9 +1,13 @@
 {
   "name": "studyhelper",
-  "version": "1.5.4",
+  "version": "1.4.0",
   "private": true,
   "engines": {
     "node": ">=18"
+  },
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.55.0"
