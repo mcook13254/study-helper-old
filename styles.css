@@ -49,3 +49,10 @@ body.auth-locked .main #view { min-height:100vh; }
 @media(max-width:800px){.ai-layout{grid-template-columns:1fr}.ai-sidebar{order:2}.ai-chat-card{min-height:560px}.ai-message{max-width:94%}.ai-hero{flex-direction:column}}
 
 .ai-usage-row{display:flex;align-items:center;gap:10px;margin-top:10px}.ai-safety-box{display:flex;flex-direction:column;gap:4px;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(90,80,180,.06)}.ai-safety-box strong{font-size:13px}.ai-safety-box span{font-size:12px;color:var(--muted)}
+
+/* v1.5 sharing/library polish */
+.auth-locked .app-shell,.auth-locked .sidebar,.auth-locked .main{min-height:100vh}
+.book-row .meta{min-width:0}
+.book-row .meta strong{display:block;overflow:hidden;text-overflow:ellipsis}
+@media (max-width: 900px){.sidebar{position:static}.app-shell{display:block}.main{min-height:auto}.topbar{position:sticky;top:0;z-index:5}.book-row{flex-wrap:wrap}.book-row .meta{flex:1 1 220px}.card-actions{flex-wrap:wrap}}
+.mode-card{text-align:left;cursor:pointer;transition:transform .12s ease, border-color .12s ease}.mode-card:hover{transform:translateY(-1px);border-color:#aaa1ff}.mode-card:focus{outline:2px solid #aaa1ff;outline-offset:2px}

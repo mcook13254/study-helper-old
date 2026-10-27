@@ -28,12 +28,14 @@
 
     <main class="main">
       <header class="topbar"><div><span class="eyebrow">YOUR STUDY HQ</span><h1 id="page-title">Dashboard</h1></div><div class="top-actions"><button class="ghost" id="quickPractice">Quick practice</button><button class="ghost" id="logoutButton">Log out</button><button class="avatar avatar-button" id="profileAvatarButton" title="Open profile">M</button></div></header>
+      <div class="notice" style="margin:12px 24px" hidden id="syncStatus"><span id="syncMessage"></span> <button class="ghost" id="retrySync">Retry sync</button></div>
       <section id="view"></section>
     </main>
   </div>
 
   <div id="modal" class="modal hidden"><div class="modal-card"><button class="modal-close" id="closeModal">&times;</button><div id="modalContent"></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="adaptive.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
