@@ -1,13 +1,14 @@
 {
   "version": 2,
-  "cleanUrls": true,
+  "framework": null,
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/api/router?endpoint=$1"
     },
     {
-      "handle": "filesystem"
+      "src": "/(app\\.js|adaptive\\.js|styles\\.css)",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",

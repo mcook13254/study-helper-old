@@ -1,4 +1,6 @@
-# StudyHelper 1.8.0
+Start with [DEPLOY-TO-VERCEL.md](DEPLOY-TO-VERCEL.md) for the Hobby plan deployment fix.
+
+# StudyHelper 1.8.1
 
 Adaptive review and safe performance improvements. Start with [UPGRADE.md](UPGRADE.md), [CHANGELOG.md](CHANGELOG.md), and [TEST-RESULTS.md](TEST-RESULTS.md). For an existing Supabase deployment, run the additive migration-v1.8.0.sql before deploying.
 
@@ -86,4 +88,5 @@ Sharing now uses unique StudyHelper usernames rather than email addresses. Email
 
 ### v1.7 username sharing
 Friend sharing uses unique StudyHelper usernames (3-24 letters, numbers, underscores). Email remains private to account/authentication workflows and is not used by the study-set sharing UI. Existing study sets and course assignments are preserved; this migration only adds username fields/indexes and sharing behavior.
+
 

@@ -1,3 +1,11 @@
+# StudyHelper 1.8.1 - Vercel Hobby deployment fix
+
+- Bundle all ten existing API handlers into one Vercel function, preserving their URLs and authorization checks.
+- Move handler implementations from api/ to server/handlers/; keep api/router.js as the only function entry point.
+- Explicitly route frontend assets and API requests; backend source paths are not served as static files in the Vercel routing configuration.
+- Add DEPLOY-TO-VERCEL.md with clean replacement and Root Directory instructions.
+- No database or saved-data changes. Twenty automated tests pass; live Vercel deployment remains unverified.
+
 # StudyHelper 1.8.0 — October 27, 2026
 
 ## Adaptive study
@@ -38,3 +46,4 @@ The supplied `studyhelper-v1.7.1-final.tar.gz` contains many nested historical p
 - Visual browser layout was not separately reviewed. No UI redesign was made.
 - Existing cloud sync remains merge-only: deleting a local set does not delete its cloud rows. This release does not add destructive cloud deletion or resolve simultaneous multi-device editing conflicts.
 - Spaced review changes question selection, not question wording. Existing Recall/Apply/Explain modes continue using authored question content. Campus Clash rivals remain simulated.
+
